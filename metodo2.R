@@ -32,7 +32,7 @@ for(n in nu){
     for(b in 1:i){
 
       #embaralhar os tempos
-      amostrab <- treino[1:(nrow(treino)*0.5),] %>%
+      amostrab <- treino %>%
         mutate(t = sample(t))
 
       #criar as features

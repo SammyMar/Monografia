@@ -30,7 +30,7 @@ resultado <- data.frame(epsilon = param_combinations$epsilon,
 for(e in epsilon){
   for(r in radius){
     for(t in threshold){
-      res <- stcd(x=df$x,
+      res <- ?stcd(x=df$x,
             y=df$y,
             t=df$t,
             radius=r,

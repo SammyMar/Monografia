@@ -40,3 +40,4 @@ cria_variaveis <- function(df, rho = 0.03, time_window = 0.02) {
 
 
 
+
