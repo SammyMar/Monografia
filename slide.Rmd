@@ -1,0 +1,234 @@
+---
+title: "Apresentação Resultados das simulações"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      ratio: '16:9'
+
+---
+
+# METODO MAD-STEC
+
+- Forma mais robusta do método STEC proposto em **Assunção e Correia (2009)**.
+
+- Se baseia em um método iterativo onde, ao encontrar um cluster, reduz o número de observações dentro do cluster e aplica novamente o método.
+
+- O número de observações reduzidas é igual ao número de casos observados menos o número de casos esperados dentro do cluster.
+
+- Os dados retirados são escolhidos de forma aleatória. Caso um novo cluster seja detectado e ele tenha interseção com o primeiro cluster, a interseção é retirada e o modelo aplicado novamente. 
+
+- Esse processo é refeito quantas vezes necessárias para achar o número de clusters presentes na amostra.
+
+---
+
+# NOSSO METODO
+
+1. Divida o banco em um treino (**1,...,k**) e teste (**k+1,...,N**), nosso método irá trabalhar com uma amostra pequena de treino.
+
+2. Em cada **b** iteração, com **b = 1,...,B,** os tempos serão embaralhados. Crie as features e treine o modelo para cada **b** reembaralhamento.
+
+3. Crie as features para a observação k+1 com base nos dados originais e prediza como sendo anomalia ou não:
+    
+    - Caso seja classificada como anomalia, ela pertencerá ao cluster.
+    - caso não seja, adicione-a ao banco de dados treino.
+    
+4. Repita o processo para cada uma das observações pertencentes ao conjunto teste. 
+
+5. Caso na observação j (j>k) seja observado que já existem um número A de observações classificadas como cluster, e essas observações estão contidas no mesmo cilindro, acione o alarme e pare o processo.
+
+---
+
+# ESTUDO ANTERIOR
+
+Antes de aplicar o resultado dos estudos feitos no artigo, fizemos simulaçÕes únicas para saber o desempenho do algoritmo em diferentes situaçÕes, supondo o metodo original onde o método foi utilizado apenas de uma forma analítica.
+
+- **Iterações (B)**: 100, 200 e 500.
+
+- **Parâmetro nu do modelo (nu)**: 0.01, 0.05 e 0.1.
+
+- **Tamanhos de Amostras (N)**: 70, 100, 300, 500 e 1000.
+
+Totalizando 45 combinaçÕes para os 3 casos diferêntes: 1 cluster (**Modelo 1**), 2 clusters em locais e tempos diferentes (**Modelo 2**), 2 clusters em tempos iguais e locais diferentes (**Modelo 3**) e 2 clusters em tempos diferentes e locais iguais (**Modelo 4**).
+
+---
+
+# Modelo 1
+
+```{r echo=FALSE}
+library(kableExtra)
+
+aux <- read.csv2('Resultado_modelo1.csv')
+colnames(aux) <- c('','B', 'nu', 'N', 'Falsos Cluster (%)', 'Cluster Correto (%)', 'Não Cluster errado(%)', 'Não Cluster Correto(%)')
+
+# Crie a tabela com kableExtra
+tabela <- kable(aux, format = "html", escape = F) %>%
+  kable_styling(full_width = FALSE) %>%
+  scroll_box(height = "500px") # Defina a altura máxima da tabela e adicione a barra de rolagem
+
+tabela
+```
+
+
+
+---
+
+# Modelo 2
+```{r echo=FALSE}
+library(kableExtra)
+
+aux <- read.csv2('Resultado_modelo2.csv')
+colnames(aux) <- c('','B', 'nu', 'N', 'Falsos Cluster (%)', 'Cluster Correto (%)', 'Não Cluster errado(%)', 'Não Cluster Correto(%)')
+
+# Crie a tabela com kableExtra
+tabela <- kable(aux, format = "html", escape = F) %>%
+  kable_styling(full_width = FALSE) %>%
+  scroll_box(height = "500px") # Defina a altura máxima da tabela e adicione a barra de rolagem
+
+tabela
+```
+---
+
+# Modelo 3
+```{r echo=FALSE}
+library(kableExtra)
+
+aux <- read.csv2('Resultado_modelo3.csv')
+colnames(aux) <- c('','B', 'nu', 'N', 'Falsos Cluster (%)', 'Cluster Correto (%)', 'Não Cluster errado(%)', 'Não Cluster Correto(%)')
+
+# Crie a tabela com kableExtra
+tabela <- kable(aux, format = "html", escape = F) %>%
+  kable_styling(full_width = FALSE) %>%
+  scroll_box(height = "500px") # Defina a altura máxima da tabela e adicione a barra de rolagem
+
+tabela
+```
+---
+
+# Modelo 4
+```{r echo=FALSE}
+library(kableExtra)
+
+aux <- read.csv2('Resultado_modelo4.csv')
+colnames(aux) <- c('','B', 'nu', 'N', 'Falsos Cluster (%)', 'Cluster Correto (%)', 'Não Cluster errado(%)', 'Não Cluster Correto(%)')
+
+# Crie a tabela com kableExtra
+tabela <- kable(aux, format = "html", escape = F) %>%
+  kable_styling(full_width = FALSE) %>%
+  scroll_box(height = "500px") # Defina a altura máxima da tabela e adicione a barra de rolagem
+
+tabela
+```
+
+---
+# NOVA ABORDAGEM
+
+Algumas mudanças foram consideradas ao algoritimo original:
+
+- Ao inves de passar em todas as observaçoes uma a uma a cada iteração, foi realizado por grupo de variaveis.
+
+- Foi testado de duas formas, com acrescimo das classificadas como não cluster ao treino (modelo 2) e sem o acrescimo (modelo 1).
+
+- O alarme foi alterado para 3 observações ao invés de 5, número de repetições monte carlo para 10, iterações para 30.
+
+---
+# TIPOS DE ESTUDO E MODELOS (Atigo Marquinhos)
+ 
+Cada um dos dois modelos foi testado segundo: 
+
+**Estudo 1:** Treinamento do modelo em um conjunto de dados sintéticos sem nenhum cluster.
+
+**Estudo 2:** Treinamento do modelo em um conjunto de dados com 1 único cluster.
+
+**Estudo 3:** Treinamento do modelo em um conjunto de dados com 2 clusters em tempos e locais diferentes.
+
+Os estudos foram feitos segundo simulação Monte Carlo onde M= 10.
+
+---
+
+# RESULTADOS ESTUDO 1 - Modelo 1
+
+```{r echo=FALSE}
+library(kableExtra)
+
+aux <- readRDS('Resultado_Estudo1.RDS')
+colnames(aux) <- c( 'Não Cluster Correto(%)',  'Falsos Cluster (%)', 'Alarme Incorreto')
+
+# Crie a tabela com kableExtra
+tabela <- kable(aux, format = "html", escape = F) %>%
+  kable_styling(full_width = T) # Defina a altura máxima da tabela e adicione a barra de rolagem
+
+tabela
+```
+
+---
+# RESULTADOS ESTUDO 1 - Modelo 2
+
+```{r echo=FALSE}
+library(kableExtra)
+
+aux <- readRDS('Resultado_Estudo1_var2.RDS')
+colnames(aux) <- c( 'Não Cluster Correto(%)',  'Falsos Cluster (%)', 'Alarme Incorreto')
+
+# Crie a tabela com kableExtra
+tabela <- kable(aux, format = "html", escape = F) %>%
+  kable_styling(full_width = T) # Defina a altura máxima da tabela e adicione a barra de rolagem
+
+tabela
+```
+
+---
+# RESULTADOS ESTUDO 2 - Modelo 1
+
+
+```{r echo=FALSE}
+library(kableExtra)
+
+aux <- readRDS('Resultado_Estudo2.RDS')
+colnames(aux) <- c( 'Não Cluster Correto(%)', 'Não Cluster Incorreto(%)', 'Falsos Cluster (%)', 'Cluster Correto (%)', 'Alarme Incorreto', 'Alarme Correto')
+
+# Crie a tabela com kableExtra
+tabela <- kable(aux, format = "html", escape = F) %>%
+  kable_styling(full_width = T) # Defina a altura máxima da tabela e adicione a barra de rolagem
+
+tabela
+```
+---
+# RESULTADOS ESTUDO 2 - Modelo 2
+
+
+```{r echo=FALSE}
+library(kableExtra)
+
+aux <- readRDS('Resultado_Estudo2_var2.RDS')
+colnames(aux) <- c( 'Não Cluster Correto(%)', 'Não Cluster Incorreto(%)', 'Falsos Cluster (%)', 'Cluster Correto (%)', 'Alarme Incorreto', 'Alarme Correto')
+
+# Crie a tabela com kableExtra
+tabela <- kable(aux, format = "html", escape = F) %>%
+  kable_styling(full_width = T) # Defina a altura máxima da tabela e adicione a barra de rolagem
+
+tabela
+```
+
+---
+# RESULTADOS ESTUDO 3 - Modelo 1
+
+
+```{r echo=FALSE}
+library(kableExtra)
+
+aux <- readRDS('Resultado_Estudo3.RDS')
+colnames(aux) <- c( 'Não Cluster Correto(%)', 'Não Cluster Incorreto(%)', 'Falsos Cluster (%)', 'Cluster Correto (%)', 'Alarme Incorreto', 'Alarme Correto')
+
+# Crie a tabela com kableExtra
+tabela <- kable(aux, format = "html", escape = F) %>%
+  kable_styling(full_width = T) # Defina a altura máxima da tabela e adicione a barra de rolagem
+
+tabela
+```
+
+
+---
