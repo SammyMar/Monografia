@@ -25,137 +25,120 @@ output:
 
 ---
 
-# NOSSO METODO
+# NOSSO METODO - I
 
-1. Divida o banco em um treino (**1,...,k**) e teste (**k+1,...,N**), nosso método irá trabalhar com uma amostra pequena de treino.
+1. Divida o banco em treino (**1,...,k**) e teste (**k+1,...,N**). Nosso método irá trabalhar com uma amostra pequena de treino (15%).
 
-2. Em cada **b** iteração, com **b = 1,...,B,** os tempos serão embaralhados. Crie as features e treine o modelo para cada **b** reembaralhamento.
+2. Em cada **b** iteração, com **b = 1,...,B,** os tempos serão embaralhados. Crie as features e treine o modelo para cada **b** reembaralhamento. As features são:
 
-3. Crie as features para a observação k+1 com base nos dados originais e prediza como sendo anomalia ou não:
+3. Para cada uma das observações (**k+1,,,,N**), crie as features com base nos dados originais e prediza como sendo anomalia ou não para cada um dos **B** treinamentos:
     
-    - Caso seja classificada como anomalia, ela pertencerá ao cluster.
-    - caso não seja, adicione-a ao banco de dados treino.
-    
-4. Repita o processo para cada uma das observações pertencentes ao conjunto teste. 
+    - Caso seja classificada como anomalia (pelo menos 90% dos treinamentos), ela pertencerá ao cluster.
+    - caso não seja, adicione-a ao banco de dados treino (Testamos com e sem essa adição).
 
 5. Caso na observação j (j>k) seja observado que já existem um número A de observações classificadas como cluster, e essas observações estão contidas no mesmo cilindro, acione o alarme e pare o processo.
 
 ---
-
-# ESTUDO ANTERIOR
-
-Antes de aplicar o resultado dos estudos feitos no artigo, fizemos simulaçÕes únicas para saber o desempenho do algoritmo em diferentes situaçÕes, supondo o metodo original onde o método foi utilizado apenas de uma forma analítica.
-
-- **Iterações (B)**: 100, 200 e 500.
-
-- **Parâmetro nu do modelo (nu)**: 0.01, 0.05 e 0.1.
-
-- **Tamanhos de Amostras (N)**: 70, 100, 300, 500 e 1000.
-
-Totalizando 45 combinaçÕes para os 3 casos diferêntes: 1 cluster (**Modelo 1**), 2 clusters em locais e tempos diferentes (**Modelo 2**), 2 clusters em tempos iguais e locais diferentes (**Modelo 3**) e 2 clusters em tempos diferentes e locais iguais (**Modelo 4**).
-
----
-
-# Modelo 1
-
-```{r echo=FALSE}
-library(kableExtra)
-
-aux <- read.csv2('Resultado_modelo1.csv')
-colnames(aux) <- c('','B', 'nu', 'N', 'Falsos Cluster (%)', 'Cluster Correto (%)', 'Não Cluster errado(%)', 'Não Cluster Correto(%)')
-
-# Crie a tabela com kableExtra
-tabela <- kable(aux, format = "html", escape = F) %>%
-  kable_styling(full_width = FALSE) %>%
-  scroll_box(height = "500px") # Defina a altura máxima da tabela e adicione a barra de rolagem
-
-tabela
-```
-
+# NOSSO METODO - II
+As features utilizadas são:
+  
+  - **Var1**: Distância até a última ocorrência. Caso tenha duas observações com tempo igual, pega a de menor distância.
+  - **Var2**: Diferença de tempo até a observação mais recente do cilindro de raio $\rho$ e comprimento *time_window*
+  - **Var3**: Número de observações dentro do cilindro. 
+    
+Perceba que para essas variáveis, excluimos as observações dentro do intervalo de tempo de $t_1$ (primeiro tempo) a *time_window*, como uma espécie de queima ou aquecimento, já que as observações no intervalo iniciarão com valores discrepantes do resto.
 
 
 ---
-
-# Modelo 2
-```{r echo=FALSE}
-library(kableExtra)
-
-aux <- read.csv2('Resultado_modelo2.csv')
-colnames(aux) <- c('','B', 'nu', 'N', 'Falsos Cluster (%)', 'Cluster Correto (%)', 'Não Cluster errado(%)', 'Não Cluster Correto(%)')
-
-# Crie a tabela com kableExtra
-tabela <- kable(aux, format = "html", escape = F) %>%
-  kable_styling(full_width = FALSE) %>%
-  scroll_box(height = "500px") # Defina a altura máxima da tabela e adicione a barra de rolagem
-
-tabela
-```
----
-
-# Modelo 3
-```{r echo=FALSE}
-library(kableExtra)
-
-aux <- read.csv2('Resultado_modelo3.csv')
-colnames(aux) <- c('','B', 'nu', 'N', 'Falsos Cluster (%)', 'Cluster Correto (%)', 'Não Cluster errado(%)', 'Não Cluster Correto(%)')
-
-# Crie a tabela com kableExtra
-tabela <- kable(aux, format = "html", escape = F) %>%
-  kable_styling(full_width = FALSE) %>%
-  scroll_box(height = "500px") # Defina a altura máxima da tabela e adicione a barra de rolagem
-
-tabela
-```
----
-
-# Modelo 4
-```{r echo=FALSE}
-library(kableExtra)
-
-aux <- read.csv2('Resultado_modelo4.csv')
-colnames(aux) <- c('','B', 'nu', 'N', 'Falsos Cluster (%)', 'Cluster Correto (%)', 'Não Cluster errado(%)', 'Não Cluster Correto(%)')
-
-# Crie a tabela com kableExtra
-tabela <- kable(aux, format = "html", escape = F) %>%
-  kable_styling(full_width = FALSE) %>%
-  scroll_box(height = "500px") # Defina a altura máxima da tabela e adicione a barra de rolagem
-
-tabela
-```
-
----
-# NOVA ABORDAGEM
+# NOSSO METODO - III
 
 Algumas mudanças foram consideradas ao algoritimo original:
 
-- Ao inves de passar em todas as observaçoes uma a uma a cada iteração, foi realizado por grupo de variaveis.
-
 - Foi testado de duas formas, com acrescimo das classificadas como não cluster ao treino (modelo 2) e sem o acrescimo (modelo 1).
 
+- No modelo 2, os treinos eram refeitos apenas quando 10 observacoes fossem classificadas como não sendo anomalias, de modo a não treinar novamente para cada observacao e reduzir o custo computacional.
+
 - O alarme foi alterado para 3 observações ao invés de 5, número de repetições monte carlo para 10, iterações para 30.
+
+- Quando um alarme soava, as observações que estavam dentro do cilindro para ativação do alarme eram retiradas, para que não soasse o mesmo alarme repetidamente.
+
+- Como as observações são preditas uma a uma, foi também observado a diferença de tempo entre o primeiro alarme correto e o tempo de inicio do cluster.
 
 ---
 # TIPOS DE ESTUDO E MODELOS (Atigo Marquinhos)
  
 Cada um dos dois modelos foi testado segundo: 
 
-**Estudo 1:** Treinamento do modelo em um conjunto de dados sintéticos sem nenhum cluster.
+**Estudo 1:** Treinamento do modelo em um conjunto de dados gerados sem nenhum cluster, 300 observações.
 
-**Estudo 2:** Treinamento do modelo em um conjunto de dados com 1 único cluster.
+**Estudo 2:** Treinamento do modelo em um conjunto de dados gerados com 1 único cluster. 350 observações no total, coordanadas do cluster: x = [0.95,1], y = [0.95,1] e t = [0.95,1]
 
-**Estudo 3:** Treinamento do modelo em um conjunto de dados com 2 clusters em tempos e locais diferentes.
+**Estudo 3:** Treinamento do modelo em um conjunto de dados gerados com 2 clusters em tempos e locais diferentes. 400 observações no total, coordenadas cluster 1: x = [0.95,1], y = [0.95,1] e t = [0.95,1], coordenadas cluster 2: x = [0.50,0.55], y = [0.70,0.75] e t = [0.60,0.65]
 
-Os estudos foram feitos segundo simulação Monte Carlo onde M= 10.
+Os estudos foram feitos segundo simulação Monte Carlo onde M= 10, as coordendas variam entre 0 e 1, tanto $(x,y)$ e $t$.
 
 ---
+# TERMOS UTILIZADOS
 
-# RESULTADOS ESTUDO 1 - Modelo 1
+**Falso Cluster** - Se a observação foi classificada como anomalia mas não estava presente no intervalo do cluster.
 
+**Cluster Correto** - Se a observação foi classificada como anomalia e estava presente no intervalo do cluster.
+
+**Não Cluster Correto** - Se não foi classificada como anomalia e não estava presente no intervalo do cluster.
+
+**Não Cluster Incorreto** - Se não foi classificada como anomalia e estava presente no intervalo do cluster.
+
+**Alarme incorreto** - Se o alarme soou fora do tempo e coordenadas do cluster.
+
+**Alarme correto** - Se o alarme soou dentro do tempo e coordenadas do cluster.
+---
+# RESULTADO RESUMIDO - I
+Aqui é apresentado o resultado médio para cada modelo e estudo
 ```{r echo=FALSE}
 library(kableExtra)
 
+mod1_1 <- readRDS('Resultado_Estudo1_1.RDS') %>% colMeans()
+mod2_1 <- readRDS('Resultado_Estudo1_1_var.RDS')%>% colMeans()
+aux <- rbind(mod1_1,mod2_1)
+row.names(aux) <- c('Modelo 1', 'Modelo 2')
+colnames(aux) <- c( 'Não Cluster Correto',  'Falsos Cluster', 'Alarme Incorreto')
+t1 <-  kable(aux, format = "html", escape = F,caption = 'Estudo 1') %>%
+  kable_styling(full_width = T) 
+t1
+mod1_2 <- readRDS('Resultado_Estudo2_1.RDS') %>% colMeans()
+mod2_2 <- readRDS('Resultado_Estudo2_1_var.RDS')%>% colMeans()
+aux <- rbind(mod1_2,mod2_2)
+row.names(aux) <- c('Modelo 1', 'Modelo 2')
+colnames(aux) <-c( 'Não Cluster Correto', 'Não Cluster Incorreto', 'Falsos Cluster ', 'Cluster Correto ', 'Alarme Incorreto', 'Alarme Correto', 'Tempo até o primeiro alarme correto')
+t2 <-  kable(aux, format = "html", escape = F,caption = 'Estudo 2') %>%
+  kable_styling(full_width = T) 
+t2
+
+```
+
+
+---
+# RESULTADO RESUMIDO - II
+```{r echo=FALSE}
+mod1_3 <- readRDS('Resultado_Estudo3_1.RDS') %>% colMeans()
+mod2_3 <- readRDS('Resultado_Estudo3_1_var.RDS')%>% colMeans()
+aux <- rbind(mod1_3,mod2_3)
+row.names(aux) <- c('Modelo 1', 'Modelo 2')
+colnames(aux) <- c( 'Não Cluster Correto', 'Não Cluster Incorreto', 'Falsos Cluster', 'Cluster Correto ', 'Alarme Incorreto', 'Alarme Correto', 'Tempo até o primeiro alarme correto (cluster 1)',  'Tempo até o primeiro alarme correto (cluster 2)' )
+t3 <-  kable(aux, format = "html", escape = F,caption = 'Estudo 3') %>%
+  kable_styling(full_width = T) 
+t3
+```
+
+
+
+---
+# RESULTADOS ESTUDO 1 - Modelo 1
+
+```{r echo=FALSE}
+
 aux <- readRDS('Resultado_Estudo1.RDS')
-colnames(aux) <- c( 'Não Cluster Correto(%)',  'Falsos Cluster (%)', 'Alarme Incorreto')
+colnames(aux) <- c( 'Não Cluster Correto',  'Falsos Cluster', 'Alarme Incorreto')
 
 # Crie a tabela com kableExtra
 tabela <- kable(aux, format = "html", escape = F) %>%
@@ -168,10 +151,10 @@ tabela
 # RESULTADOS ESTUDO 1 - Modelo 2
 
 ```{r echo=FALSE}
-library(kableExtra)
 
-aux <- readRDS('Resultado_Estudo1_var2.RDS')
-colnames(aux) <- c( 'Não Cluster Correto(%)',  'Falsos Cluster (%)', 'Alarme Incorreto')
+
+aux <- readRDS('Resultado_Estudo1_var.RDS')
+colnames(aux) <- c( 'Não Cluster Correto',  'Falsos Cluster ', 'Alarme Incorreto')
 
 # Crie a tabela com kableExtra
 tabela <- kable(aux, format = "html", escape = F) %>%
@@ -185,10 +168,10 @@ tabela
 
 
 ```{r echo=FALSE}
-library(kableExtra)
+
 
 aux <- readRDS('Resultado_Estudo2.RDS')
-colnames(aux) <- c( 'Não Cluster Correto(%)', 'Não Cluster Incorreto(%)', 'Falsos Cluster (%)', 'Cluster Correto (%)', 'Alarme Incorreto', 'Alarme Correto')
+colnames(aux) <- c( 'Não Cluster Correto', 'Não Cluster Incorreto', 'Falsos Cluster ', 'Cluster Correto ', 'Alarme Incorreto', 'Alarme Correto', 'Tempo até o primeiro alarme correto')
 
 # Crie a tabela com kableExtra
 tabela <- kable(aux, format = "html", escape = F) %>%
@@ -201,10 +184,10 @@ tabela
 
 
 ```{r echo=FALSE}
-library(kableExtra)
 
-aux <- readRDS('Resultado_Estudo2_var2.RDS')
-colnames(aux) <- c( 'Não Cluster Correto(%)', 'Não Cluster Incorreto(%)', 'Falsos Cluster (%)', 'Cluster Correto (%)', 'Alarme Incorreto', 'Alarme Correto')
+
+aux <- readRDS('Resultado_Estudo2_var.RDS')
+colnames(aux) <- c( 'Não Cluster Correto', 'Não Cluster Incorreto', 'Falsos Cluster ', 'Cluster Correto', 'Alarme Incorreto', 'Alarme Correto', 'Tempo até o primeiro alarme correto')
 
 # Crie a tabela com kableExtra
 tabela <- kable(aux, format = "html", escape = F) %>%
@@ -218,10 +201,10 @@ tabela
 
 
 ```{r echo=FALSE}
-library(kableExtra)
+
 
 aux <- readRDS('Resultado_Estudo3.RDS')
-colnames(aux) <- c( 'Não Cluster Correto(%)', 'Não Cluster Incorreto(%)', 'Falsos Cluster (%)', 'Cluster Correto (%)', 'Alarme Incorreto', 'Alarme Correto')
+colnames(aux) <- c( 'Não Cluster Correto', 'Não Cluster Incorreto', 'Falsos Cluster ', 'Cluster Correto', 'Alarme Incorreto', 'Alarme Correto', 'Tempo até o primeiro alarme correto 1',  'Tempo até o primeiro alarme correto 2' )
 
 # Crie a tabela com kableExtra
 tabela <- kable(aux, format = "html", escape = F) %>%
@@ -232,3 +215,18 @@ tabela
 
 
 ---
+# RESULTADOS ESTUDO 3 - Modelo 2
+
+
+```{r echo=FALSE}
+
+
+aux <- readRDS('Resultado_Estudo3_var.RDS')
+colnames(aux) <- c( 'Não Cluster Correto', 'Não Cluster Incorreto', 'Falsos Cluster ', 'Cluster Correto ', 'Alarme Incorreto', 'Alarme Correto', 'Tempo até o primeiro alarme correto 1',  'Tempo até o primeiro alarme correto 2' )
+
+# Crie a tabela com kableExtra
+tabela <- kable(aux, format = "html", escape = F) %>%
+  kable_styling(full_width = T) # Defina a altura máxima da tabela e adicione a barra de rolagem
+
+tabela
+```

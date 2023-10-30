@@ -1,6 +1,6 @@
 cria_variaveis <- function(df, rho = 0.03, time_window = 0.02) {
   df <- df[order(df$t), ]
-  df$var1 <- NA
+  df$var1 <- 0
   df$var2 <- -1
   df$var3 <- 0
   row.names(df) <- c(1:nrow(df))
