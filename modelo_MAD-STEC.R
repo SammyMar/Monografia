@@ -127,7 +127,6 @@ removeAllIntersection <- function(E, C_minus) {
 MAD_STEC <- function(E, rho, A, n, Perc = 99) {
   # Inicialize o conjunto de clusters identificados
   Cl <- list()
-  E <- E[1:n,]
   # Avalie a estatística R_n e estimar o parâmetro ε
   result <- evaluate_Rn(E, rho, Perc, n)
   N <- result$N
@@ -135,15 +134,15 @@ MAD_STEC <- function(E, rho, A, n, Perc = 99) {
   Lambda <- result$Lambda
   R_n <- result$R_n
 
-  while (R_n >= A | nrow(E > 1)) {
+  while(R_n >= A &  nrow(E) > 1){
     # Encontre um novo cluster
     C_plus <- findCluster(E, Lambda, rho)
 
     # Encontre a interseção entre o novo cluster e os clusters existentes
     Cl_aux <- dplyr::bind_rows(Cl) |> unique()
-    if(length(Cl_aux) == 0)C_minus <- NULL else C_minus <- dplyr::semi_join(Cl_aux, C_plus, by = c('x','y', 't'))
+    if(length(Cl_aux) == 0)C_minus <- data.frame() else C_minus <- dplyr::semi_join(Cl_aux, C_plus, by = c('x','y', 't'))
 
-    if (length(C_minus) == 0) {
+    if (nrow(C_minus) == 0) {
       # Se não houver interseção, adicione o novo cluster a Cl
       Cl <- append(Cl, list(C_plus))
       # Calcule δ
@@ -154,7 +153,7 @@ MAD_STEC <- function(E, rho, A, n, Perc = 99) {
 
       # Atualize n
       n <- n - delta
-    } else {
+    } else{
       # Remova todas as interseções entre E e C_minus
       E <- removeAllIntersection(E, C_minus)
 
